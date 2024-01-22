@@ -17,7 +17,7 @@ check =[(0,0),(1,0),(0,1),(1,1),#レンガ -1
         (2,6),(3,6),(2,7),(3,7),#小山 -3
         (6,6),(7,6),(6,7),(7,7),#洞窟 
         (0,8),(1,8),(0,9),(1,9),#登り階段
-        (2,8),(3,8),(3,9),(3,9),#お城
+        (2,8),(3,8),(2,9),(3,9),#お城
         (4,8),(5,8),(4,9),(5,9),#街
         ]
 damage1 =[(6,2),(7,2),(6,3),(7,3)]#毒沼 -1
@@ -33,13 +33,12 @@ enca2 =[(6,0),(7,0),(6,1),(7,1),#森  -2
         ]
 enca3 =[(2,6),(3,6),(2,7),(3,7),]#小山 -3
 
-
 class App:
     def __init__(self):#変数とか増やす
         pyxel.init(256,256)
         pyxel.load("music2.pyxres")
         #お試し枠
-        self.battle_command_frag = True
+        self.battle_command_frag = False
         self.battle_command_x = 8
         self.battle_command_y = 2
         #お試し枠
@@ -52,7 +51,7 @@ class App:
 
         self.menu_dis_x =8
         self.menu_dis_y =8
-        self.canmove_frag = 0 #0が動ける 1がメニューの基本画面 100が戦闘画面
+        self.canmove_frag = 0 #0が動ける 1がメニューの基本画面 100が戦闘画面 5が王様のお話
         self.levelup_frag = 2
         self.damege_frag = 0
 
@@ -82,6 +81,26 @@ class App:
         self.character_mp_now = 0
         self.character_pw = 4
         self.character_agi = 4
+
+        #ここからスライム関連
+        self.frag = False
+        self.nom_command = 0 #コマンド？
+        self.nom_suraimu_emg = 0#スライムがあらわれた！
+        self.nom_attack = 0#⚪︎⚪︎⚪︎⚪︎の攻撃！
+        self.nom_attack_time = -100
+        self.a = 0
+        self.b = 0
+        self.c = 0
+        self.d = 0
+        self.n =10.5
+        self.m =11.5
+        self.player_attack =12.5
+        self.player_attack_frag = False
+        self.taosu = 13.5
+        self.nom_taosu = 0
+        self.back_frag = -100
+        self.now_level = 0
+        self.level_music =True
 
     def level_non(self):#LVと数値の処理
         if pyxel.btn(pyxel.KEY_L):#LVup
@@ -410,7 +429,7 @@ class App:
         self.character_agi_10 =(self.character_agi%100)//10
         self.character_agi_1 =(self.character_agi%10)//1
 
-    def menu1(self):
+    def menu1(self):#メニュー画面表示
             pyxel.bltm(self.menu_dis_x,self.menu_dis_y,0,256,0,64,96)
             pyxel.blt(self.menu_dis_x + 16,self.menu_dis_y,1,self.player_name_1_x,self.player_name_1_y,8,8,0)
             pyxel.blt(self.menu_dis_x + 24,self.menu_dis_y,1,self.player_name_2_x,self.player_name_2_y,8,8,0)
@@ -439,12 +458,82 @@ class App:
             pyxel.blt(self.menu_dis_x + 40, self.menu_dis_y + 80, 1, self.exp_10*8, 112, 8, 8, 0)
             pyxel.blt(self.menu_dis_x + 48, self.menu_dis_y + 80, 1, self.exp_1*8, 112, 8, 8, 0)
 
-    def comand(self):
+    def comand(self):#戦闘のコマンド表示
         pyxel.bltm(self.menu_dis_x+16*8,self.menu_dis_y,0,40*8,0*8,14*8,6*8)#コマンドの枠
         pyxel.bltm(56,160,0,32*8,16*8,18*8,10*8)#メッセージの枠
-        pyxel.blt(self.menu_dis_x+9*8+self.battle_command_x*8,self.menu_dis_y+self.battle_command_y*8,1,48,96,8,8,0)
-        
+        pyxel.blt(self.menu_dis_x+9*8+self.battle_command_x*8,self.menu_dis_y+self.battle_command_y*8,1,self.select_ui,96,8,8,0)
 
+    def slaim_update(self):
+        if pyxel.btnp(pyxel.KEY_SPACE) and self.battle_command_frag == True:
+            if self.battle_command_x==8 and self.battle_command_y ==2:
+                self.player_attack_frag = True
+                self.nom_attack_time =pyxel.frame_count
+                self.battle_command_frag = False
+
+        if pyxel.btnp(pyxel.KEY_SPACE):
+                self.n = self.massage_up(self.n)
+                self.m = self.massage_up(self.m)
+                self.player_attack = self.massage_up(self.player_attack)
+                self.taosu = self.massage_up(self.taosu)
+                print(self.player_attack_frag)
+
+        if pyxel.frame_count % 1 ==0 and self.frag ==True and self.nom_suraimu_emg < 16:
+            self.nom_suraimu_emg += 1
+        if self.nom_suraimu_emg ==16:
+            if pyxel.frame_count % 1 ==0 and self.frag ==True and self.nom_command < 16:
+                self.nom_command += 1
+        if self.nom_command == 15:
+            self.battle_command_frag = True
+
+        if pyxel.frame_count % 1 ==0 and self.player_attack_frag == True and self.nom_attack < 16:
+            self.nom_attack += 1
+            self.a=8
+        if pyxel.frame_count==self.nom_attack_time+1:
+            self.b=8
+            pyxel.play(2,25)
+        if pyxel.frame_count==self.nom_attack_time+2:
+            self.c=8
+        if pyxel.frame_count==self.nom_attack_time+3:
+            self.d=8
+        if self.nom_attack ==16:
+            if pyxel.frame_count % 1 ==0 and  self.nom_taosu < 16:
+                self.nom_taosu += 1
+        if self.nom_taosu ==10:
+            pyxel.stop(0)
+            pyxel.stop(1)
+            self.frag = False
+
+        if self.nom_taosu ==15:
+            pyxel.play(2,56)
+            self.exp+=int(pyxel.rndi(10,20))
+            self.gold+=int(pyxel.rndi(10,30))
+            self.back_frag = pyxel.frame_count
+        
+        if self.now_level < self.level and self.level_music == True:
+            self.level_music =False
+            pyxel.stop(2)
+            pyxel.play(3,0)
+
+    def slaim_draw(self):
+        if self.frag == True:
+            pyxel.blt(120,140,0,0,64,16,16,0)
+        pyxel.bltm(64,self.n*16,0,0*8,32*8,self.nom_suraimu_emg * 8,2*8)#スライムがあらわれた！
+        pyxel.bltm(64,self.m*16,0,0*8,34*8,self.nom_command * 8,2*8)#コマンド？
+        if self.player_attack_frag == True:
+            pyxel.bltm(64,self.player_attack*16,0,0*8,36*8,self.nom_attack * 8,2*8)
+            pyxel.blt(64,self.player_attack*16+8,1,self.player_name_1_x,self.player_name_1_y,8,self.a,0)
+            pyxel.blt(72,self.player_attack*16+8,1,self.player_name_2_x,self.player_name_2_y,8,self.b,0)
+            pyxel.blt(80,self.player_attack*16+8,1,self.player_name_3_x,self.player_name_3_y,8,self.c,0)
+            pyxel.blt(88,self.player_attack*16+8,1,self.player_name_4_x,self.player_name_4_y,8,self.d,0)
+            pyxel.bltm(64,self.taosu*16,0,0*8,42*8,self.nom_taosu * 8,2*8)
+        
+    def massage_up(self,a):#メッセージを上に送るやつ
+        if pyxel.btnp(pyxel.KEY_SPACE) and not a <= -1:
+            a -=1
+            if a == 9.5:
+                a = -1
+        return a
+    
     def run(self):#実行するところ
         self.scene = SCENE_TITLE
         pyxel.playm(0, loop=True)
@@ -1217,10 +1306,17 @@ class App:
         #以下　次のシーンに行くところ
         if self.select_x + 48 == 176 and self.select_y + 96 == 176:
                if pyxel.btnp(pyxel.KEY_SPACE):
+                    self.canmove_frag = 5
                     self.scroll_x = 80
                     self.scroll_y = -160
                     pyxel.playm(4, loop = True)
                     self.scene = SCENE_CASTLE
+
+    def king_update(self):
+        if pyxel.btnp(pyxel.KEY_SPACE):
+            self.canmove_frag = 0
+    def king_draw(self):
+        pyxel.bltm(56,160,0,32*8,16*8,18*8,10*8)#メッセージの枠
 
     def update_castle_scene(self):#ラダトーム
         if pyxel.frame_count % 10 == 0 and self.canmove_frag == 0:#時間経過の文章
@@ -1232,11 +1328,16 @@ class App:
         
         App.level_non(self)
         
+        if self.canmove_frag == 5:
+            App.king_update(self)
+
         #以下歩行についてのやつ
         if pyxel.btnp(pyxel.KEY_C):
             pyxel.play(3,63)
             self.canmove_frag = 1
-        if pyxel.btnp(pyxel.KEY_X):
+        if (pyxel.btnp(pyxel.KEY_X) 
+            and self.canmove_frag == 1
+            ):
             pyxel.play(3,63)
             self.canmove_frag = 0
         
@@ -1379,41 +1480,84 @@ class App:
             self.encount_frag = 70000
             self.canmove_frag = 100
             self.musicstrattime = pyxel.frame_count
+            self.now_level = self.level
             pyxel.stop(0)
             pyxel.stop(1)
             pyxel.play(2,17)
             pyxel.play(3,18)
 
         if pyxel.frame_count == self.musicstrattime + 60:
+            self.frag = True
             pyxel.playm(3, loop = True)
             self.scene = SCENE_BATTLE
 
     def update_battle_scene(self):#戦闘画面
+        App.level_non(self)
         if self.battle_command_frag == True:#コマンド操作
+
+            if pyxel.frame_count % 10 == 0:#時間経過の文章
+                self.time_count +=1
+                if self.time_count % 2 == 0:
+                    self.select_ui = 48
+                else:
+                    self.select_ui = 56
+
             if pyxel.btn(pyxel.KEY_LEFT):
                 if self.battle_command_x == 14:
+                    pyxel.play(3,63)
                     self.battle_command_x -=6
                 else:
                     None
             if pyxel.btn(pyxel.KEY_RIGHT):
                 if self.battle_command_x == 8:
+                    pyxel.play(3,63)
                     self.battle_command_x +=6
                 else:
                     None
             if pyxel.btn(pyxel.KEY_UP):
                 if self.battle_command_y == 4:
+                    pyxel.play(3,63)
                     self.battle_command_y -=2
                 else:
                     None
             if pyxel.btn(pyxel.KEY_DOWN):
                 if self.battle_command_y == 2:
+                    pyxel.play(3,63)
                     self.battle_command_y +=2
                 else:
                     None
 
-        if pyxel.btnp(pyxel.KEY_B):#フィールドに戻る
+    #if pyxel.btnp(pyxel.KEY_SPACE):
+    #    self.battle_command_frag = False
+        App.slaim_update(self)
+
+        if (pyxel.btnp(pyxel.KEY_B) or
+            pyxel.btnp(pyxel.KEY_SPACE) and self.battle_command_x==8 and self.battle_command_y ==4 or
+            pyxel.frame_count == self.back_frag+60
+            ):#フィールドに戻る
             self.encount_frag = pyxel.rndi(300,700)
             self.canmove_frag = 0
+            self.battle_command_frag = False
+
+            self.frag = False
+            self.nom_command = 0 #コマンド？
+            self.nom_suraimu_emg = 0#スライムがあらわれた！
+            self.nom_attack = 0#⚪︎⚪︎⚪︎⚪︎の攻撃！
+            self.nom_attack_time = -100
+            self.a = 0
+            self.b = 0
+            self.c = 0
+            self.d = 0
+            self.n =10.5
+            self.m =11.5
+            self.player_attack =12.5
+            self.player_attack_frag = False
+            self.taosu = 13.5
+            self.nom_taosu = 0
+            self.back_frag = -100
+            self.now_level = 0
+            self.level_music =True
+
             pyxel.playm(1, loop = True)
             self.scene = SCENE_FIELD1
     
@@ -1433,6 +1577,8 @@ class App:
 
     def draw_title_scene(self):#タイトル
         pyxel.cls(1)
+        pyxel.bltm(5, 0, 0, 64*8, 0, 256, 12*8,)
+        pyxel.bltm(60,130,0,73*8,13*8,18*8,7*8)
 
     def draw_start_scene(self):#名前を決めるシーン
         pyxel.cls(0)
@@ -1453,18 +1599,21 @@ class App:
         pyxel.cls(13)
         pyxel.bltm(0,0,2,256 + self.scroll_x ,256 + self.scroll_y ,511 + self.scroll_x, 511 + self.scroll_x)
         pyxel.blt(128, 128, 0, self.character_ui, 64, 16, 16, 0)
-        pyxel.text(0,5,'x='+ str(self.scroll_x),7)
-        pyxel.text(0,10,'y='+ str(self.scroll_y),7)
-
+        #pyxel.text(0,5,'x='+ str(self.scroll_x),7)
+        #pyxel.text(0,10,'y='+ str(self.scroll_y),7)
         if self.canmove_frag == 1:
             App.menu1(self)
+
+        if self.canmove_frag == 5:
+            App.king_draw(self)
+            #pyxel.bltm(56,160,0,32*8,16*8,18*8,10*8)#メッセージの枠
             
     def draw_field1_scene(self):#フィールド
         pyxel.cls(13)
         pyxel.bltm(0,0,1,640 + self.scroll_x ,640 + self.scroll_y ,895 + self.scroll_x, 895 + self.scroll_x)
         pyxel.blt(128, 128, 0, self.character_ui, 64, 16, 16, 0)
-        pyxel.text(0,5,'x='+ str(self.encount_frag),0)
-        pyxel.text(0,10,'y='+ str(self.scroll_y),0)
+        #pyxel.text(0,5,'x='+ str(self.encount_frag),0)
+        #pyxel.text(0,10,'y='+ str(self.scroll_y),0)
 
 
         if self.canmove_frag == 1:
@@ -1474,6 +1623,7 @@ class App:
         pyxel.cls(0)
         App.menu1(self)
         App.comand(self)
+        App.slaim_draw(self)
 
 
 App().run()
