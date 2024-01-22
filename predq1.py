@@ -1315,8 +1315,10 @@ class App:
     def king_update(self):
         if pyxel.btnp(pyxel.KEY_SPACE):
             self.canmove_frag = 0
+            
     def king_draw(self):
         pyxel.bltm(56,160,0,32*8,16*8,18*8,10*8)#メッセージの枠
+        pyxel.bltm(64,10.5*16,0,0*8,48*8,16* 8,8*8)
 
     def update_castle_scene(self):#ラダトーム
         if pyxel.frame_count % 10 == 0 and self.canmove_frag == 0:#時間経過の文章
